@@ -45,14 +45,27 @@ Menampilkan data lama (stale data) dengan indikator refresh di latar belakang ja
 
 
 ## Refactoring Challenge
-
-1. **Pemisahan Widget `TodoTile`:**
-   * Widget bar item ToDo diekstrak ke dalam [todo_tile.dart](file:///d:/Kuliah-Sems5/Pemrograman%20Mobile/244107020001-mobile-course/03-week-3-navigation-state-management/lib/widgets/todo_tile.dart) mandiri sehingga `TodoPage` menjadi lebih ringkas, modular, dan teruji secara independen.
-2. **Provider Filter Turunan (`filteredTodoListProvider`):**
-   * Menambahkan `TodoFilter` (Semua, Belum Selesai, Selesai) dan provider turunan `filteredTodoListProvider` pada [todo_provider.dart](file:///d:/Kuliah-Sems5/Pemrograman%20Mobile/244107020001-mobile-course/03-week-3-navigation-state-management/lib/providers/todo_provider.dart) yang membaca `todoListProvider` dan `todoFilterProvider`.
-3. **Integrasi GoRouter & Bottom NavigationBar:**
-   * Konfigurasi rute pada [app_router.dart](file:///d:/Kuliah-Sems5/Pemrograman%20Mobile/244107020001-mobile-course/03-week-3-navigation-state-management/lib/router/app_router.dart) menggunakan `ShellRoute` dengan rute `/` (Daftar ToDo) dan `/stats` (Statistik ToDo) serta `NavigationBar` Material 3 untuk berpindah antar halaman secara mulus.
-
 **Hasil Flutter analyze dan flutter test pada refactoring challenge:**
 ![Hasil analyze & test](./screenshots/analyze_test_refactor.png)
 
+
+## Refleksi
+
+1. **Kapan `setState` masih cukup, dan kapan state harus naik ke Riverpod?**
+`setState` cukup untuk state lokal dan sederhana dalam satu widget (seperti toggle UI atau input lokal). State harus naik ke Riverpod jika bersifat global, perlu diakses lintas halaman, memuat logika bisnis terpisah, atau menangani alur asinkron yang kompleks.
+
+2. **Apa perbedaan `context.go` dan `context.push`, dan kapan masing-masing tepat digunakan?**
+`context.go` mengganti rute tanpa menumpuk histori (cocok untuk menu utama/tab bar), sedangkan `context.push` menumpuk rute baru di atas stack sehingga memiliki navigasi *back* (cocok untuk membuka halaman detail).
+
+3. **Bagaimana `AsyncValue` mencegah bug dibanding tiga boolean terpisah?**
+`AsyncValue` menyatukan status loading, error, dan data dalam satu tipe (*pattern matching*), sehingga mencegah kondisi inkonsisten (misal loading dan error aktif bersamaan) serta mewajibkan penanganan seluruh skenario lewat `.when()`.
+
+4. **Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?**
+Menghubungkan kalkulasi statistik langsung ke `todoListProvider` alih-alih memakai data *dummy*, agar metrik ToDo (total, selesai, tertunda) sinkron dan akurat secara *real-time*.
+
+
+## Preview Hasil Akhir
+### Halaman Daftar ToDo
+![Hasil ToDo](./screenshots/hasil_todo.png)
+### Halaman Statistik
+![Hasil Stats](./screenshots/hasil_stats.png)
