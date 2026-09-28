@@ -38,7 +38,13 @@ Future<void> refreshPostsInBackground(PostRepository repository) async {
   }
 }
 
-Future<int> syncNotes(NoteRepository repository) async {
+Future<int> syncNotes(
+  NoteRepository repository, {
+  bool forceOffline = false,
+}) async {
+  if (forceOffline) {
+    throw StateError('Sync tidak tersedia saat mode offline aktif.');
+  }
   final dirtyCount = await repository.countDirty();
   if (dirtyCount == 0) return 0;
   await Future<void>.delayed(const Duration(seconds: 1));

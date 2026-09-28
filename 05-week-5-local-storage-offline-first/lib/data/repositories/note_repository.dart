@@ -5,7 +5,7 @@ import '../local/note.dart';
 
 class NoteRepository {
   NoteRepository({Future<Database> Function()? openDb})
-      : _openDb = openDb ?? openLocalDatabase;
+    : _openDb = openDb ?? openLocalDatabase;
 
   final Future<Database> Function() _openDb;
 
@@ -28,15 +28,18 @@ class NoteRepository {
 
   Future<int> addNote({required String title, String body = ''}) async {
     final database = await _openDb();
-    return database.insert(
-      'notes',
-      Note(
-        title: title,
-        body: body,
-        updatedAt: DateTime.now(),
-        dirty: true,
-      ).toMap(),
+    final columns = await database.rawQuery('PRAGMA table_info(notes)');
+    final existingColumns = columns.map((column) => column['name']).toSet();
+    final note = Note(
+      title: title,
+      body: body,
+      updatedAt: DateTime.now(),
+      dirty: true,
     );
+    final values = note.toMap();
+    if (existingColumns.contains('content')) values['content'] = title;
+    if (existingColumns.contains('is_dirty')) values['is_dirty'] = 1;
+    return database.insert('notes', values);
   }
 
   Future<int> countDirty() async {

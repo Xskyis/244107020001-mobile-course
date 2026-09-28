@@ -6,7 +6,7 @@ import 'package:week5_offline_notes/data/providers.dart';
 
 class FakeNoteRepository extends NoteRepository {
   FakeNoteRepository({this.items = const [], this.throwError = false})
-      : super(openDb: () => throw UnimplementedError());
+    : super(openDb: () => throw UnimplementedError());
 
   final List<Note> items;
   final bool throwError;
@@ -44,9 +44,9 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         noteRepositoryProvider.overrideWithValue(
-          FakeNoteRepository(items: [
-            Note(title: 'Tes', updatedAt: DateTime.now()),
-          ]),
+          FakeNoteRepository(
+            items: [Note(title: 'Tes', updatedAt: DateTime.now())],
+          ),
         ),
       ],
     );

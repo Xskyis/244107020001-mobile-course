@@ -11,7 +11,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:week5_offline_notes/main.dart';
 
 void main() {
-  testWidgets('offline-first app renders navigation', (WidgetTester tester) async {
+  testWidgets('offline-first app renders navigation', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const ProviderScope(child: MyApp()));
     expect(find.text('Cache-first posts'), findsOneWidget);
     expect(find.text('Catatan'), findsOneWidget);

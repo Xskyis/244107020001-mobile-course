@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'local/note.dart';
@@ -8,11 +9,15 @@ import 'repositories/note_repository.dart';
 import 'repositories/post_repository.dart';
 import 'sync.dart';
 
-final dioProvider = Provider<Dio>((ref) => Dio(BaseOptions(
+final dioProvider = Provider<Dio>(
+  (ref) => Dio(
+    BaseOptions(
       baseUrl: 'https://jsonplaceholder.typicode.com',
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 8),
-    )));
+    ),
+  ),
+);
 
 class ForceOfflineNotifier extends Notifier<bool> {
   @override
@@ -21,10 +26,24 @@ class ForceOfflineNotifier extends Notifier<bool> {
   void setValue(bool value) => state = value;
 }
 
-final forceOfflineProvider =
-    NotifierProvider<ForceOfflineNotifier, bool>(ForceOfflineNotifier.new);
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() => ThemeMode.light;
 
-final noteRepositoryProvider = Provider<NoteRepository>((ref) => NoteRepository());
+  void setValue(ThemeMode value) => state = value;
+}
+
+final forceOfflineProvider = NotifierProvider<ForceOfflineNotifier, bool>(
+  ForceOfflineNotifier.new,
+);
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);
+final lastOpenedProvider = FutureProvider<DateTime?>((ref) => readLastOpened());
+
+final noteRepositoryProvider = Provider<NoteRepository>(
+  (ref) => NoteRepository(),
+);
 final postRepositoryProvider = Provider<PostRepository>(
   (ref) => PostRepository(ref.watch(dioProvider)),
 );
@@ -48,10 +67,23 @@ final postsProvider = FutureProvider<List<Post>>((ref) async {
 
 Future<void> initializePreferences(WidgetRef ref) async {
   ref.read(forceOfflineProvider.notifier).setValue(await readForceOffline());
+  final darkMode = await readDarkMode();
+  ref
+      .read(themeModeProvider.notifier)
+      .setValue(darkMode ? ThemeMode.dark : ThemeMode.light);
+  await writeLastOpened(DateTime.now());
+  ref.invalidate(lastOpenedProvider);
 }
 
 Future<void> setForceOffline(WidgetRef ref, bool value) async {
   ref.read(forceOfflineProvider.notifier).setValue(value);
   await writeForceOffline(value);
   ref.invalidate(postsProvider);
+}
+
+Future<void> setDarkMode(WidgetRef ref, bool value) async {
+  ref
+      .read(themeModeProvider.notifier)
+      .setValue(value ? ThemeMode.dark : ThemeMode.light);
+  await writeDarkMode(value);
 }

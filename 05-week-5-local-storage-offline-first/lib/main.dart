@@ -10,14 +10,19 @@ void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
       title: 'Offline First Notes',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+      ),
+      darkTheme: ThemeData.dark(useMaterial3: true),
+      themeMode: themeMode,
       routerConfig: appRouter,
     );
   }
@@ -46,11 +51,21 @@ class _HomePageState extends ConsumerState<HomePage> {
       body: pages[_selectedIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+        onDestinationSelected: (index) =>
+            setState(() => _selectedIndex = index),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.article_outlined), label: 'Posts'),
-          NavigationDestination(icon: Icon(Icons.note_alt_outlined), label: 'Catatan'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Pengaturan'),
+          NavigationDestination(
+            icon: Icon(Icons.article_outlined),
+            label: 'Posts',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.note_alt_outlined),
+            label: 'Catatan',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            label: 'Pengaturan',
+          ),
         ],
       ),
     );
@@ -127,21 +142,46 @@ class _NotesTabState extends ConsumerState<NotesTab> {
   Future<void> _addNote() async {
     final content = _controller.text.trim();
     if (content.isEmpty) return;
-    await ref.read(noteRepositoryProvider).add(content);
+    try {
+      await ref.read(noteRepositoryProvider).add(content);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Catatan gagal disimpan: $error')));
+      return;
+    }
     _controller.clear();
     ref.invalidate(notesProvider);
     ref.invalidate(dirtyCountProvider);
   }
 
   Future<void> _sync() async {
+    if (ref.read(forceOfflineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sync tidak tersedia saat mode offline aktif.'),
+        ),
+      );
+      return;
+    }
     setState(() => _syncing = true);
-    final count = await syncNotes(ref.read(noteRepositoryProvider));
+    final count = await syncNotes(
+      ref.read(noteRepositoryProvider),
+      forceOffline: ref.read(forceOfflineProvider),
+    );
     if (!mounted) return;
     setState(() => _syncing = false);
     ref.invalidate(notesProvider);
     ref.invalidate(dirtyCountProvider);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(count == 0 ? 'Tidak ada catatan dirty.' : '$count catatan tersinkron.')),
+      SnackBar(
+        content: Text(
+          count == 0
+              ? 'Tidak ada catatan dirty.'
+              : '$count catatan tersinkron.',
+        ),
+      ),
     );
   }
 
@@ -160,7 +200,10 @@ class _NotesTabState extends ConsumerState<NotesTab> {
               tooltip: 'Sync catatan',
               onPressed: _syncing ? null : _sync,
               icon: _syncing
-                  ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.sync),
             ),
           ),
@@ -172,18 +215,33 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                Expanded(child: TextField(controller: _controller, decoration: const InputDecoration(labelText: 'Catatan baru'))),
-                IconButton(onPressed: _addNote, icon: const Icon(Icons.add_circle)),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      labelText: 'Catatan baru',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _addNote,
+                  icon: const Icon(Icons.add_circle),
+                ),
               ],
             ),
           ),
           Expanded(
             child: notes.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Gagal membaca catatan: $error')),
+              error: (error, _) =>
+                  Center(child: Text('Gagal membaca catatan: $error')),
               data: (items) => items.isEmpty
                   ? const Center(child: Text('Belum ada catatan.'))
-                  : ListView(children: items.map((note) => NoteTile(note: note)).toList()),
+                  : ListView(
+                      children: items
+                          .map((note) => NoteTile(note: note))
+                          .toList(),
+                    ),
             ),
           ),
         ],
@@ -198,13 +256,31 @@ class SettingsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final offline = ref.watch(forceOfflineProvider);
+    final darkMode = ref.watch(themeModeProvider) == ThemeMode.dark;
+    final lastOpened = ref.watch(lastOpenedProvider).value;
     return Scaffold(
       appBar: AppBar(title: const Text('Pengaturan offline')),
-      body: SwitchListTile(
-        title: const Text('Paksa mode offline'),
-        subtitle: const Text('Posts hanya membaca cached_posts'),
-        value: offline,
-        onChanged: (value) => setForceOffline(ref, value),
+      body: ListView(
+        children: [
+          SwitchListTile(
+            title: const Text('Tema gelap'),
+            subtitle: const Text('Disimpan sebagai preferensi lokal'),
+            value: darkMode,
+            onChanged: (value) => setDarkMode(ref, value),
+          ),
+          SwitchListTile(
+            title: const Text('Paksa mode offline'),
+            subtitle: const Text('Posts dan catatan tidak memakai jaringan'),
+            value: offline,
+            onChanged: (value) => setForceOffline(ref, value),
+          ),
+          if (lastOpened != null)
+            ListTile(
+              leading: const Icon(Icons.schedule),
+              title: const Text('Terakhir dibuka'),
+              subtitle: Text(lastOpened.toLocal().toString()),
+            ),
+        ],
       ),
     );
   }

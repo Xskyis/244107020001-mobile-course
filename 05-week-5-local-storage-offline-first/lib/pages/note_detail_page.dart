@@ -15,13 +15,17 @@ class NoteDetailPage extends ConsumerWidget {
       appBar: AppBar(title: Text('Detail catatan #$noteId')),
       body: note.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Gagal membaca catatan: $error')),
+        error: (error, _) =>
+            Center(child: Text('Gagal membaca catatan: $error')),
         data: (item) => item == null
             ? const Center(child: Text('Catatan tidak ditemukan.'))
             : ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  Text(item.title, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(
+                    item.title,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                   if (item.body.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(item.body),

@@ -20,4 +20,14 @@ void main() {
     expect(repository.dirty, 0);
     expect(await syncNotes(repository), 0);
   });
+
+  test('syncNotes rejects writes while forceOffline is enabled', () async {
+    final repository = FakeNoteRepository();
+
+    expect(
+      () => syncNotes(repository, forceOffline: true),
+      throwsA(isA<StateError>()),
+    );
+    expect(repository.dirty, 2);
+  });
 }
