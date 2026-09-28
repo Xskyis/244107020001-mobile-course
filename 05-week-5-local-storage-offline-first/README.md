@@ -13,13 +13,13 @@ Mempelajari penyimpanan lokal dan pendekatan offline-first pada aplikasi mobile.
 
 ## PRAKTIKUM 3
 * Gambar 1 Mengaktifkan Force Offline:
-![gambar1](./screenshots/force_offline.png)
+- ![gambar1](./screenshots/force_offline.png)
 * Gambar 2 Menambah Catatan:
-![gambar2](./screenshots/add_note.png)
+- ![gambar2](./screenshots/add_note.png)
 * Gambar 3 Badge Catatan:
-![gambar3](./screenshots/note_badge.png)
+- ![gambar3](./screenshots/note_badge.png)
 * Gambar 4 Badge Catatan Setelah Sinkronisasi:
-![gambar4](./screenshots/note_badge_synced.png)
+- ![gambar4](./screenshots/note_badge_synced.png)
 - Langkah:
 	1. Jalankan aplikasi saat perangkat atau emulator terhubung ke internet.
 	2. Buka tab **Posts**, kemudian tekan tombol refresh untuk mengambil data dari endpoint JSONPlaceholder.
