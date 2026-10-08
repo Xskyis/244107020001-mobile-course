@@ -46,12 +46,13 @@ Pada pengujian ini, aplikasi sedang dalam keadaan terminated atau ditutup sepenu
 3. Apakah foreground memakai local notification manual? (tanpa ini banner tidak muncul saat aplikasi terbuka).
 **Jawaban:** Ya, foreground memakai local notification manual.
 4. Apakah klik dari ketiga state (foreground/background/terminated) masuk ke rute yang benar? Buktikan dengan tabel pengujian.
-**Jawaban:** Ya, klik dari ketiga state (foreground/background/terminated) masuk ke rute yang benar. Berikut tabel pengujian:
-| State        | Rute yang Dituju | Hasil Pengujian |
-|--------------|-----------------|----------------|
-| Foreground   | /home           | Berhasil       |
-| Background   | /home           | Berhasil       |
-| Terminated   | /home           | Berhasil       |
+**Jawaban:** Ya. Payload pengujian menggunakan `data.route` bernilai `/pengumuman/3`. Ketiga state berhasil membuka rute tersebut saat banner ditekan.
+
+| State aplikasi | Rute dari payload | Aksi pengujian | Hasil |
+| --- | --- | --- | --- |
+| Foreground | `/pengumuman/3` | Kirim notifikasi saat aplikasi terbuka, lalu tekan local notification | Berhasil, membuka `/pengumuman/3` |
+| Background | `/pengumuman/3` | Tekan Home, kirim notifikasi, lalu tekan banner sistem | Berhasil, membuka `/pengumuman/3` |
+| Terminated | `/pengumuman/3` | Swipe-close aplikasi, kirim notifikasi, lalu tekan banner | Berhasil, `getInitialMessage` membuka `/pengumuman/3` |
 5. Apakah token/secret tidak di-hardcode dan tidak di-log penuh? Perbaiki bila AI melanggarnya.
 **Jawaban:** Ya, token/secret tidak di-hardcode dan tidak di-log penuh.
 
