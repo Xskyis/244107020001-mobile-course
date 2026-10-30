@@ -50,7 +50,7 @@ git push -u origin develop
 git switch -c update/adddocs-week8
 ```
 
-Berikut adalah dokumentasi pembuatan branch `develop` dan branch kerja:
+- Berikut adalah dokumentasi pembuatan branch `develop` dan branch kerja:
 ![Membuat dan Push Branch Develop](screenshots/gitdevelop.png)
 
 ![Membuat Branch Fitur Kerja](screenshots/branchfeature.png)
