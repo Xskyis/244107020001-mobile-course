@@ -63,16 +63,10 @@ class _MainHomePageState extends ConsumerState<MainHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    const pages = [
-      NotesPage(),
-      SettingsPage(),
-    ];
+    const pages = [NotesPage(), SettingsPage()];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) =>

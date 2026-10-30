@@ -27,10 +27,7 @@ class FakeNoteRepository implements NoteRepository {
     String body = '',
   }) async {
     if (fail) {
-      return (
-        note: null,
-        failure: const LocalFailure('db locked (simulasi)'),
-      );
+      return (note: null, failure: const LocalFailure('db locked (simulasi)'));
     }
     final note = Note(
       id: items.length + 1,
@@ -55,40 +52,41 @@ class FakeNoteRepository implements NoteRepository {
 
 void main() {
   group('GetNotes Use Case Test', () {
-    test('GetNotes meneruskan daftar data dari repository dengan benar (sukses)',
-        () async {
-      final sampleNotes = [
-        Note(
-          id: 1,
-          title: 'Catatan Arsitektur',
-          body: 'Menerapkan Clean Architecture',
-          updatedAt: DateTime(2026, 9, 27),
-          dirty: false,
-        ),
-        Note(
-          id: 2,
-          title: 'Catatan Riverpod',
-          body: 'Dependency Injection via Provider',
-          updatedAt: DateTime(2026, 9, 28),
-          dirty: true,
-        ),
-      ];
+    test(
+      'GetNotes meneruskan daftar data dari repository dengan benar (sukses)',
+      () async {
+        final sampleNotes = [
+          Note(
+            id: 1,
+            title: 'Catatan Arsitektur',
+            body: 'Menerapkan Clean Architecture',
+            updatedAt: DateTime(2026, 9, 27),
+            dirty: false,
+          ),
+          Note(
+            id: 2,
+            title: 'Catatan Riverpod',
+            body: 'Dependency Injection via Provider',
+            updatedAt: DateTime(2026, 9, 28),
+            dirty: true,
+          ),
+        ];
 
-      final repo = FakeNoteRepository(items: sampleNotes);
-      final useCase = GetNotes(repo);
+        final repo = FakeNoteRepository(items: sampleNotes);
+        final useCase = GetNotes(repo);
 
-      final result = await useCase();
+        final result = await useCase();
 
-      expect(result.failure, isNull);
-      expect(result.notes.length, 2);
-      expect(result.notes.first.title, 'Catatan Arsitektur');
-      expect(result.notes.first.dirty, isFalse);
-      expect(result.notes.last.title, 'Catatan Riverpod');
-      expect(result.notes.last.dirty, isTrue);
-    });
+        expect(result.failure, isNull);
+        expect(result.notes.length, 2);
+        expect(result.notes.first.title, 'Catatan Arsitektur');
+        expect(result.notes.first.dirty, isFalse);
+        expect(result.notes.last.title, 'Catatan Riverpod');
+        expect(result.notes.last.dirty, isTrue);
+      },
+    );
 
-    test('GetNotes meneruskan Failure tanpa crash / melempar exception ke UI (gagal)',
-        () async {
+    test('GetNotes meneruskan Failure tanpa crash / melempar exception ke UI (gagal)', () async {
       final repo = FakeNoteRepository(fail: true);
       final useCase = GetNotes(repo);
 

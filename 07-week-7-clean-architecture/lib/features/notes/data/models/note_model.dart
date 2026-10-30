@@ -10,12 +10,12 @@ class NoteModel extends Note {
   });
 
   Map<String, Object?> toMap() => {
-        if (id != null) 'id': id,
-        'title': title,
-        'body': body,
-        'updated_at': updatedAt.millisecondsSinceEpoch,
-        'dirty': dirty ? 1 : 0,
-      };
+    if (id != null) 'id': id,
+    'title': title,
+    'body': body,
+    'updated_at': updatedAt.millisecondsSinceEpoch,
+    'dirty': dirty ? 1 : 0,
+  };
 
   factory NoteModel.fromMap(Map<String, Object?> map) {
     DateTime parsedDate;
@@ -23,8 +23,8 @@ class NoteModel extends Note {
     if (rawDate is int) {
       parsedDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
     } else if (rawDate is String) {
-      parsedDate = DateTime.tryParse(rawDate) ??
-          DateTime.fromMillisecondsSinceEpoch(0);
+      parsedDate =
+          DateTime.tryParse(rawDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
     } else {
       parsedDate = DateTime.fromMillisecondsSinceEpoch(0);
     }
@@ -49,10 +49,10 @@ class NoteModel extends Note {
   }
 
   Note toEntity() => Note(
-        id: id,
-        title: title,
-        body: body,
-        updatedAt: updatedAt,
-        dirty: dirty,
-      );
+    id: id,
+    title: title,
+    body: body,
+    updatedAt: updatedAt,
+    dirty: dirty,
+  );
 }

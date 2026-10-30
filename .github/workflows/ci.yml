@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter environment
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies (Week 7 Clean Architecture)
+        working-directory: ./07-week-7-clean-architecture
+        run: flutter pub get
+
+      - name: Verify code formatting
+        working-directory: ./07-week-7-clean-architecture
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Run static analysis
+        working-directory: ./07-week-7-clean-architecture
+        run: flutter analyze
+
+      - name: Run unit tests
+        working-directory: ./07-week-7-clean-architecture
+        run: flutter test --coverage
+

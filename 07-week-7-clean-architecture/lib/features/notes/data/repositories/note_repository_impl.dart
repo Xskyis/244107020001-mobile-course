@@ -27,7 +27,7 @@ Future<Database> openDefaultNotesDb() async {
 
 class NoteRepositoryImpl implements NoteRepository {
   NoteRepositoryImpl({Future<Database> Function()? openDb})
-      : _openDb = openDb ?? openDefaultNotesDb;
+    : _openDb = openDb ?? openDefaultNotesDb;
 
   final Future<Database> Function() _openDb;
 
@@ -36,8 +36,7 @@ class NoteRepositoryImpl implements NoteRepository {
     try {
       final db = await _openDb();
       final rows = await db.query('notes', orderBy: 'updated_at DESC');
-      final notes =
-          rows.map((r) => NoteModel.fromMap(r).toEntity()).toList();
+      final notes = rows.map((r) => NoteModel.fromMap(r).toEntity()).toList();
       return (notes: notes, failure: null);
     } catch (e) {
       return (

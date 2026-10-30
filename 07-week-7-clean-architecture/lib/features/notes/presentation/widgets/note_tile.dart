@@ -4,11 +4,7 @@ import '../../../../core/format.dart';
 import '../../domain/entities/note.dart';
 
 class NoteTile extends StatelessWidget {
-  const NoteTile({
-    super.key,
-    required this.note,
-    this.onTap,
-  });
+  const NoteTile({super.key, required this.note, this.onTap});
 
   final Note note;
   final VoidCallback? onTap;

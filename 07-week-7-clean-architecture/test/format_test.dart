@@ -8,11 +8,14 @@ void main() {
       expect(formatDate(dt), '2026-10-11 08:30');
     });
 
-    test('formatRelativeDate mengembalikan "Baru saja" untuk selisih < 1 menit', () {
-      final now = DateTime(2026, 10, 11, 10, 0, 30);
-      final dt = DateTime(2026, 10, 11, 10, 0, 0);
-      expect(formatRelativeDate(dt, now: now), 'Baru saja');
-    });
+    test(
+      'formatRelativeDate mengembalikan "Baru saja" untuk selisih < 1 menit',
+      () {
+        final now = DateTime(2026, 10, 11, 10, 0, 30);
+        final dt = DateTime(2026, 10, 11, 10, 0, 0);
+        expect(formatRelativeDate(dt, now: now), 'Baru saja');
+      },
+    );
 
     test('formatRelativeDate mengembalikan menit lalu untuk selisih menit', () {
       final now = DateTime(2026, 10, 11, 10, 15);

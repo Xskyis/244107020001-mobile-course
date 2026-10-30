@@ -73,5 +73,5 @@ class NotesActionNotifier extends Notifier<AsyncValue<void>> {
 
 final notesActionProvider =
     NotifierProvider<NotesActionNotifier, AsyncValue<void>>(
-  NotesActionNotifier.new,
-);
+      NotesActionNotifier.new,
+    );

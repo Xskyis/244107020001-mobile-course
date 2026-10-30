@@ -64,17 +64,20 @@ void main() {
       expect(repo.lastAdded?.title, 'Belajar SOLID');
     });
 
-    test('AddNote mengembalikan ValidationFailure jika judul kosong/spasi', () async {
-      final repo = FakeNoteRepositoryForAdd();
-      final useCase = AddNote(repo);
+    test(
+      'AddNote mengembalikan ValidationFailure jika judul kosong/spasi',
+      () async {
+        final repo = FakeNoteRepositoryForAdd();
+        final useCase = AddNote(repo);
 
-      final result = await useCase(title: '   ');
+        final result = await useCase(title: '   ');
 
-      expect(result.note, isNull);
-      expect(result.failure, isA<ValidationFailure>());
-      expect(result.failure!.message, contains('tidak boleh kosong'));
-      expect(repo.lastAdded, isNull);
-    });
+        expect(result.note, isNull);
+        expect(result.failure, isA<ValidationFailure>());
+        expect(result.failure!.message, contains('tidak boleh kosong'));
+        expect(repo.lastAdded, isNull);
+      },
+    );
 
     test('AddNote menangani LocalFailure jika database gagal', () async {
       final repo = FakeNoteRepositoryForAdd(fail: true);

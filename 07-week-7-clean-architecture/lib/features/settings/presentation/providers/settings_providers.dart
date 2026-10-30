@@ -24,8 +24,9 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
   }
 }
 
-final themeModeProvider =
-    NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);
 
 class ForceOfflineNotifier extends Notifier<bool> {
   @override
@@ -42,8 +43,9 @@ class ForceOfflineNotifier extends Notifier<bool> {
   }
 }
 
-final forceOfflineProvider =
-    NotifierProvider<ForceOfflineNotifier, bool>(ForceOfflineNotifier.new);
+final forceOfflineProvider = NotifierProvider<ForceOfflineNotifier, bool>(
+  ForceOfflineNotifier.new,
+);
 
 final lastOpenedProvider = FutureProvider<DateTime?>((ref) async {
   final repo = ref.watch(settingsRepositoryProvider);

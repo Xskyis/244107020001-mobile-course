@@ -14,19 +14,14 @@ class SettingsPage extends ConsumerWidget {
     final lastOpenedAsync = ref.watch(lastOpenedProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pengaturan'),
-        elevation: 1,
-      ),
+      appBar: AppBar(title: const Text('Pengaturan'), elevation: 1),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           SwitchListTile(
             title: const Text('Tema Gelap'),
             subtitle: const Text('Disimpan sebagai preferensi lokal'),
-            secondary: Icon(
-              darkMode ? Icons.dark_mode : Icons.light_mode,
-            ),
+            secondary: Icon(darkMode ? Icons.dark_mode : Icons.light_mode),
             value: darkMode,
             onChanged: (value) =>
                 ref.read(themeModeProvider.notifier).setDarkMode(value),
@@ -34,10 +29,10 @@ class SettingsPage extends ConsumerWidget {
           const Divider(),
           SwitchListTile(
             title: const Text('Paksa Mode Offline'),
-            subtitle: const Text('Catatan tidak menggunakan sinkronisasi server'),
-            secondary: Icon(
-              offline ? Icons.cloud_off : Icons.cloud_queue,
+            subtitle: const Text(
+              'Catatan tidak menggunakan sinkronisasi server',
             ),
+            secondary: Icon(offline ? Icons.cloud_off : Icons.cloud_queue),
             value: offline,
             onChanged: (value) =>
                 ref.read(forceOfflineProvider.notifier).setForceOffline(value),
