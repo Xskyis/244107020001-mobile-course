@@ -89,7 +89,7 @@ Fitur pencarian diterapkan pada modul `05-week-5-local-storage-offline-first` de
 3. **Integrasi UI TextField & Search State (`lib/main.dart` -> `NotesTab`):**
    Menambahkan `TextField` pencarian dengan ikon `Icons.search`, tombol `Icons.clear` untuk reset instan, dan integrasi dengan `filteredNotesProvider`.
 
-Berikut adalah tampilan antarmuka saat pencarian cocok:
+- Berikut adalah tampilan antarmuka saat pencarian cocok:
 ![Hasil Pencarian Catatan Relevan](screenshots/testmached.png)
 
 ---
