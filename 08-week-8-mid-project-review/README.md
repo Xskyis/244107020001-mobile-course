@@ -27,7 +27,7 @@ git branch -a
 git status
 ```
 
-Berikut adalah bukti audit riwayat Git:
+- Berikut adalah bukti audit riwayat Git:
 ![Riwayat Commit Log](screenshots/gitonline.png)
 
 ![Daftar Branch Awal](screenshots/gitbranch.png)
