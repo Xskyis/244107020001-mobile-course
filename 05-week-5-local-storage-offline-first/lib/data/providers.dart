@@ -7,6 +7,7 @@ import 'models/post.dart';
 import 'prefs.dart';
 import 'repositories/note_repository.dart';
 import 'repositories/post_repository.dart';
+import 'search.dart';
 import 'sync.dart';
 
 final dioProvider = Provider<Dio>(
@@ -33,12 +34,24 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
   void setValue(ThemeMode value) => state = value;
 }
 
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void setQuery(String query) => state = query;
+  void clear() => state = '';
+}
+
 final forceOfflineProvider = NotifierProvider<ForceOfflineNotifier, bool>(
   ForceOfflineNotifier.new,
 );
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
   ThemeModeNotifier.new,
 );
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
+  SearchQueryNotifier.new,
+);
+
 final lastOpenedProvider = FutureProvider<DateTime?>((ref) => readLastOpened());
 
 final noteRepositoryProvider = Provider<NoteRepository>(
@@ -52,6 +65,13 @@ final notesProvider = FutureProvider<List<Note>>(
   (ref) => ref.watch(noteRepositoryProvider).fetchNotes(),
   retry: (retryCount, error) => null,
 );
+
+final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
+  final notesAsync = ref.watch(notesProvider);
+  final query = ref.watch(searchQueryProvider);
+  return notesAsync.whenData((notes) => filterNotesByQuery(notes, query));
+});
+
 final noteDetailProvider = FutureProvider.family<Note?, int>(
   (ref, id) => ref.watch(noteRepositoryProvider).fetchNote(id),
 );

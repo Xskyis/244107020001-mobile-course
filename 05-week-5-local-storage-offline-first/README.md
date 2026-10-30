@@ -101,4 +101,3 @@ Saya menolak rekomendasi AI untuk menyimpan daftar catatan di SharedPreferences.
 ### Melakukan Sync Data Saat Force Offline On
 [![Bukti Force offline on](./screenshots/force_offline_on.png)]
 [![Melakukan Sync Data Saat Force Offline On](./screenshots/note_badge_synced_on.png)]
-

@@ -131,11 +131,13 @@ class NotesTab extends ConsumerStatefulWidget {
 
 class _NotesTabState extends ConsumerState<NotesTab> {
   final _controller = TextEditingController();
+  final _searchController = TextEditingController();
   bool _syncing = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -187,7 +189,8 @@ class _NotesTabState extends ConsumerState<NotesTab> {
 
   @override
   Widget build(BuildContext context) {
-    final notes = ref.watch(notesProvider);
+    final filteredNotes = ref.watch(filteredNotesProvider);
+    final currentQuery = ref.watch(searchQueryProvider);
     final dirtyCount = ref.watch(dirtyCountProvider).value ?? 0;
     return Scaffold(
       appBar: AppBar(
@@ -212,7 +215,34 @@ class _NotesTabState extends ConsumerState<NotesTab> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: TextField(
+              key: const Key('search_notes_field'),
+              controller: _searchController,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: currentQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          ref.read(searchQueryProvider.notifier).clear();
+                        },
+                      )
+                    : null,
+                hintText: 'Cari judul atau isi catatan...',
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                ref.read(searchQueryProvider.notifier).setQuery(value);
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
               children: [
                 Expanded(
@@ -231,17 +261,38 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             ),
           ),
           Expanded(
-            child: notes.when(
+            child: filteredNotes.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) =>
                   Center(child: Text('Gagal membaca catatan: $error')),
-              data: (items) => items.isEmpty
-                  ? const Center(child: Text('Belum ada catatan.'))
-                  : ListView(
-                      children: items
-                          .map((note) => NoteTile(note: note))
-                          .toList(),
-                    ),
+              data: (items) {
+                if (items.isEmpty) {
+                  if (currentQuery.trim().isNotEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.search_off,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tidak ada catatan yang cocok dengan "$currentQuery"',
+                            key: const Key('search_empty_state_text'),
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const Center(child: Text('Belum ada catatan.'));
+                }
+                return ListView(
+                  children: items.map((note) => NoteTile(note: note)).toList(),
+                );
+              },
             ),
           ),
         ],
