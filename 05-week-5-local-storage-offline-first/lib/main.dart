@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'data/providers.dart';
 import 'data/sync.dart';
 import 'router.dart';
 import 'widgets/note_tile.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // Abaikan bila .env tidak ditemukan pada environment test
+  }
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -296,6 +304,12 @@ class _NotesTabState extends ConsumerState<NotesTab> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('open_ai_chat_fab'),
+        onPressed: () => context.push('/ai-chat'),
+        icon: const Icon(Icons.auto_awesome),
+        label: const Text('AI Chat'),
       ),
     );
   }
