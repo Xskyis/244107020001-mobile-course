@@ -10,16 +10,18 @@ class NoteTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: note.id == null ? null : () => context.push('/note/${note.id}'),
-      leading: Icon(
-        note.dirty ? Icons.cloud_upload_outlined : Icons.cloud_done_outlined,
+    return RepaintBoundary(
+      child: ListTile(
+        onTap: note.id == null ? null : () => context.push('/note/${note.id}'),
+        leading: Icon(
+          note.dirty ? Icons.cloud_upload_outlined : Icons.cloud_done_outlined,
+        ),
+        title: Text(note.title),
+        subtitle: note.body.isEmpty ? null : Text(note.body),
+        trailing: note.dirty
+            ? const Chip(label: Text('belum tersinkron'))
+            : const Icon(Icons.chevron_right),
       ),
-      title: Text(note.title),
-      subtitle: note.body.isEmpty ? null : Text(note.body),
-      trailing: note.dirty
-          ? const Chip(label: Text('belum tersinkron'))
-          : const Icon(Icons.chevron_right),
     );
   }
 }

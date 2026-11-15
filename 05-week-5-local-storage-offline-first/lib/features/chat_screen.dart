@@ -62,7 +62,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chatState = ref.watch(aiChatProvider);
+    final messages = ref.watch(aiChatProvider.select((s) => s.messages));
+    final isGenerating = ref.watch(
+      aiChatProvider.select((s) => s.isGenerating),
+    );
     final usage = ref.watch(aiDailyUsageProvider).value ?? 0;
     final offline = ref.watch(forceOfflineProvider);
     final maxQuota = ref.read(aiServiceProvider).maxDailyRequests;
@@ -85,7 +88,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               ),
             ),
           ),
-          if (chatState.messages.isNotEmpty)
+          if (messages.isNotEmpty)
             IconButton(
               tooltip: 'Bersihkan chat',
               onPressed: () => ref.read(aiChatProvider.notifier).clearChat(),
@@ -110,7 +113,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               ],
             ),
           Expanded(
-            child: chatState.messages.isEmpty && !chatState.isGenerating
+            child: messages.isEmpty && !isGenerating
                 ? _EmptyChatView(
                     quickPrompts: _quickPrompts,
                     onSelectPrompt: _send,
@@ -118,35 +121,37 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(12),
-                    itemCount:
-                        chatState.messages.length +
-                        (chatState.isGenerating ? 1 : 0),
+                    itemCount: messages.length + (isGenerating ? 1 : 0),
                     itemBuilder: (context, index) {
-                      if (index == chatState.messages.length) {
-                        return _StreamingBubble(
-                          text: chatState.streamingPreview,
-                        );
+                      if (index == messages.length) {
+                        return const _StreamingBubble();
                       }
-                      final msg = chatState.messages[index];
+                      final msg = messages[index];
                       if (msg.isUser) {
-                        return _UserBubble(text: msg.text);
+                        return RepaintBoundary(child: _UserBubble(text: msg.text));
                       }
                       if (msg.isError) {
-                        return _ErrorBubble(
-                          errorText: msg.text,
-                          onUseFallback: msg.failedPrompt == null
-                              ? null
-                              : () async {
-                                  await ref
-                                      .read(aiChatProvider.notifier)
-                                      .generateWithFallback(msg.failedPrompt!);
-                                  _scrollToBottom();
-                                },
+                        return RepaintBoundary(
+                          child: _ErrorBubble(
+                            errorText: msg.text,
+                            onUseFallback: msg.failedPrompt == null
+                                ? null
+                                : () async {
+                                    await ref
+                                        .read(aiChatProvider.notifier)
+                                        .generateWithFallback(
+                                          msg.failedPrompt!,
+                                        );
+                                    _scrollToBottom();
+                                  },
+                          ),
                         );
                       }
-                      return _AiNoteBubble(
-                        message: msg,
-                        onSave: () => _saveNote(index),
+                      return RepaintBoundary(
+                        child: _AiNoteBubble(
+                          message: msg,
+                          onSave: () => _saveNote(index),
+                        ),
                       );
                     },
                   ),
@@ -160,7 +165,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   child: TextField(
                     key: const Key('ai_chat_input'),
                     controller: _promptController,
-                    enabled: !chatState.isGenerating,
+                    enabled: !isGenerating,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _send(),
                     decoration: InputDecoration(
@@ -179,8 +184,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 const SizedBox(width: 8),
                 FilledButton.icon(
                   key: const Key('ai_chat_send_btn'),
-                  onPressed: chatState.isGenerating ? null : () => _send(),
-                  icon: chatState.isGenerating
+                  onPressed: isGenerating ? null : () => _send(),
+                  icon: isGenerating
                       ? const SizedBox.square(
                           dimension: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
@@ -282,39 +287,40 @@ class _UserBubble extends StatelessWidget {
   }
 }
 
-class _StreamingBubble extends StatelessWidget {
-  const _StreamingBubble({required this.text});
-
-  final String text;
+class _StreamingBubble extends ConsumerWidget {
+  const _StreamingBubble();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final text = ref.watch(aiChatProvider.select((s) => s.streamingPreview));
     final theme = Theme.of(context);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10, right: 48),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox.square(
-              dimension: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                text.isEmpty ? 'Menyusun catatan...' : text,
-                style: theme.textTheme.bodyMedium,
+    return RepaintBoundary(
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10, right: 48),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  text.isEmpty ? 'Menyusun catatan...' : text,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

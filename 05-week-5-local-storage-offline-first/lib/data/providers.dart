@@ -5,21 +5,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../ai/ai_service.dart';
 import 'local/note.dart';
 import 'models/post.dart';
+import 'network_cache.dart';
 import 'prefs.dart';
 import 'repositories/note_repository.dart';
 import 'repositories/post_repository.dart';
 import 'search.dart';
 import 'sync.dart';
 
-final dioProvider = Provider<Dio>(
-  (ref) => Dio(
+final dioCacheInterceptorProvider = Provider<TtlCacheInterceptor>(
+  (ref) => TtlCacheInterceptor(ttl: const Duration(seconds: 60)),
+);
+
+final dioProvider = Provider<Dio>((ref) {
+  final dio = Dio(
     BaseOptions(
       baseUrl: 'https://jsonplaceholder.typicode.com',
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 8),
     ),
-  ),
-);
+  );
+  dio.interceptors.addAll([
+    ref.watch(dioCacheInterceptorProvider),
+    RetryInterceptor(dio: dio),
+  ]);
+  return dio;
+});
 
 class ForceOfflineNotifier extends Notifier<bool> {
   @override
@@ -85,6 +95,142 @@ final postsProvider = FutureProvider<List<Post>>((ref) async {
   final offline = ref.watch(forceOfflineProvider);
   return loadPostsCacheFirst(repository, forceOffline: offline);
 });
+
+class PaginatedPostsState {
+  const PaginatedPostsState({
+    this.items = const [],
+    this.page = 1,
+    this.isLoading = false,
+    this.hasMore = true,
+    this.error,
+  });
+
+  final List<Post> items;
+  final int page;
+  final bool isLoading;
+  final bool hasMore;
+  final String? error;
+
+  PaginatedPostsState copyWith({
+    List<Post>? items,
+    int? page,
+    bool? isLoading,
+    bool? hasMore,
+    String? error,
+  }) {
+    return PaginatedPostsState(
+      items: items ?? this.items,
+      page: page ?? this.page,
+      isLoading: isLoading ?? this.isLoading,
+      hasMore: hasMore ?? this.hasMore,
+      error: error,
+    );
+  }
+}
+
+class PaginatedPostsNotifier extends Notifier<PaginatedPostsState> {
+  static const int pageSize = 20;
+
+  @override
+  PaginatedPostsState build() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.mounted) {
+        loadInitial();
+      }
+    });
+    return const PaginatedPostsState(isLoading: true);
+  }
+
+  Future<void> loadInitial() async {
+    final offline = ref.read(forceOfflineProvider);
+    final repository = ref.read(postRepositoryProvider);
+    state = state.copyWith(isLoading: true, error: null);
+    if (offline) {
+      try {
+        final cached = await loadPostsCacheFirst(
+          repository,
+          forceOffline: true,
+        );
+        if (!ref.mounted) return;
+        state = PaginatedPostsState(
+          items: cached.take(pageSize).toList(),
+          page: 2,
+          isLoading: false,
+          hasMore: false,
+        );
+      } catch (e) {
+        if (!ref.mounted) return;
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
+      return;
+    }
+
+    try {
+      final firstPage = await repository.fetchPostsPage(
+        page: 1,
+        limit: pageSize,
+      );
+      if (!ref.mounted) return;
+      state = PaginatedPostsState(
+        items: firstPage,
+        page: 2,
+        isLoading: false,
+        hasMore: firstPage.length >= pageSize,
+      );
+    } catch (e) {
+      if (!ref.mounted) return;
+      final cached = await loadPostsCacheFirst(
+        repository,
+        forceOffline: true,
+      );
+      if (!ref.mounted) return;
+      if (cached.isNotEmpty) {
+        state = PaginatedPostsState(
+          items: cached,
+          page: 2,
+          isLoading: false,
+          hasMore: false,
+        );
+      } else {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || !state.hasMore || ref.read(forceOfflineProvider)) {
+      return;
+    }
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final repository = ref.read(postRepositoryProvider);
+      final nextItems = await repository.fetchPostsPage(
+        page: state.page,
+        limit: pageSize,
+      );
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        items: [...state.items, ...nextItems],
+        page: state.page + 1,
+        isLoading: false,
+        hasMore: nextItems.length >= pageSize,
+      );
+    } catch (e) {
+      if (!ref.mounted) return;
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> refresh() async {
+    ref.read(dioCacheInterceptorProvider).clear();
+    await loadInitial();
+  }
+}
+
+final paginatedPostsProvider =
+    NotifierProvider<PaginatedPostsNotifier, PaginatedPostsState>(
+      PaginatedPostsNotifier.new,
+    );
 
 Future<void> initializePreferences(WidgetRef ref) async {
   ref.read(forceOfflineProvider.notifier).setValue(await readForceOffline());
